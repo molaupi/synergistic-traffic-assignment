@@ -54,6 +54,14 @@ std::vector<T> loadVector(const std::string& fileName) {
 	return vec;
 }
 
+template<class T>
+inline void dumpVector(const std::string& fileName, const std::vector<T>& vec) {
+	std::ofstream os(fileName, std::ios::binary);
+	assert(os);
+	assert(os.is_open());
+	os.write(reinterpret_cast<const char*>(&vec[0]), vec.size() * sizeof(T));
+}
+
 std::vector<node_id> tail_from_first_out(const std::vector<edge_id> first_out) {
 	std::vector<node_id> tail(first_out.back());
 	for (node_id i = 0; i + 1 < first_out.size(); i++) {

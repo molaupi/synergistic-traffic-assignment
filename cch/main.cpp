@@ -8,6 +8,8 @@ int main(int /*argc*/, char** /*argv*/) {
 	std::cout << std::fixed << std::setprecision(6);
 	std::cerr << std::fixed << std::setprecision(6);
 
+	std::string file = "Stuttgart_morn";
+
 	std::vector<edge_id> first_out = loadVector<edge_id>("../inputs/first_out");
 	std::vector<node_id> head = loadVector<node_id>("../inputs/head");
 	std::vector<uint32_t> travel_time = loadVector<uint32_t>("../inputs/travel_time");
@@ -17,8 +19,8 @@ int main(int /*argc*/, char** /*argv*/) {
 	std::vector<float> lng = loadVector<float>("../inputs/longitude");
 	std::vector<node_id> node_order = loadVector<node_id>("../inputs/cch_order");
 	// capacity?
-	std::vector<node_id> origin = loadVector<node_id>("../inputs/od_pairs/Stuttgart_morn.origin");
-	std::vector<node_id> destination = loadVector<node_id>("../inputs/od_pairs/Stuttgart_morn.destination");
+	std::vector<node_id> origin = loadVector<node_id>("../inputs/od_pairs/" + file + ".origin");
+	std::vector<node_id> destination = loadVector<node_id>("../inputs/od_pairs/" + file + ".destination");
 	assert(origin.size() == destination.size());
 
 	std::cout << node_order.size() << " " << head.size() << std::endl;
@@ -63,7 +65,9 @@ int main(int /*argc*/, char** /*argv*/) {
 		}
 		std::cout << "  potential: " << potential << std::endl;
 		std::cerr << iteration << "\t" << total << "\t" << potential << std::endl;
-		//todo check convergence
+
+		dumpVector<flow_t>("../outputs/" + file + "." + std::to_string(iteration) + ".flow", flow);
+
 		if (abs(last_potential - potential) < 0.000001) break;
 		last_potential = potential;
 		std::cout << "  preparing next iteration" << std::endl;
