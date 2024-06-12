@@ -155,10 +155,11 @@ struct CCH_metric {
 	tuple<std::vector<weight_t>> weight;
 	tuple<std::vector<flow_t>> flow;
 	tuple<std::vector<tri>> tris;
+	std::vector<tuple<edge_id>> new_id;
 
 
 	CCH_metric() {}
-	CCH_metric(CCH& cch_) : cch(&cch_), first_out{}, head{}, weight{}, flow{}, tris{} {}
+	CCH_metric(CCH& cch_) : cch(&cch_), first_out{}, head{}, weight{}, flow{}, tris{}, new_id{} {}
 
 	void customize(const std::vector<weight_t>& weights, bool perfect = true) {
 		node_id* cch_in_tail = cch->in_tail.data();
@@ -173,7 +174,6 @@ struct CCH_metric {
 		assert(weights.size() == cch->input_arc_count());
 		std::vector<edge_id> tmp_id(cch->node_count(), invalid_id);
 		std::vector<tuple<weight_t>> tmp(cch->cch_arc_count(), {inf_weight, inf_weight});
-		std::vector<tuple<edge_id>> new_id(cch->cch_arc_count(), {invalid_id, invalid_id});
 		std::vector<tuple<tri>> tmp_tri(cch->cch_arc_count(), {tri{invalid_id, invalid_id}, tri{invalid_id, invalid_id}});
 
 		for (edge_id i = 0; i < cch->input_arc_count(); i++) {
@@ -181,6 +181,11 @@ struct CCH_metric {
 			if (j != invalid_id) {
 				uint32_t ud = cch_in_tail[i] < cch_in_head[i] ? UP : DOWN;
 				tmp[j][ud] = std::min(tmp[j][ud], weights[i]);
+
+				assert(ud != UP || cch_tail[j] == cch_in_tail[i]);
+				assert(ud != UP || cch_head[j] == cch_in_head[i]);
+				assert(ud != DOWN || cch_head[j] == cch_in_tail[i]);
+				assert(ud != DOWN || cch_tail[j] == cch_in_head[i]);
 			}
 		}
 		for (node_id i = 0; i < cch->node_count(); i++) {
@@ -260,6 +265,7 @@ struct CCH_metric {
 			flow[ud].reserve(cch->cch_arc_count());
 			tris[ud].clear();
 			tris[ud].reserve(cch->cch_arc_count());
+			new_id.assign(cch->cch_arc_count(), {invalid_id, invalid_id});
 		}
 
 		for (edge_id i = 0; i < cch->cch_arc_count(); i++) {
@@ -267,13 +273,13 @@ struct CCH_metric {
 			for (uint32_t ud : {UP, DOWN}) {
 				if (tmp[i][ud] != inf_weight && tmp_tri[i][ud] != deleted) {
 					first_out[ud][cch_tail[i] + 1]++;
+					new_id[i][ud] = head[ud].size();
 					head[ud].push_back(cch_head[i]);
 					tail[ud].push_back(cch_tail[i]);
 					weight[ud].push_back(tmp[i][ud]);
 					flow[ud].push_back(0);
-
-					new_id[i][ud] = tris[ud].size();
 					auto [a, b] = tmp_tri[i][ud];
+
 					if (a != invalid_id) {
 						assert(b != invalid_id);
 
@@ -302,17 +308,22 @@ struct CCH_metric {
 
 	std::vector<flow_t> get_flow() {
 		// propagate flow
-		for (edge_id i = cch->cch_arc_count(); i != 0;) {
-			i--;
+		for (node_id i = cch->node_count() - 1; i != invalid_id; i--) {
 			#pragma GCC unroll 2
 			for (uint32_t ud : {UP, DOWN}) {
-				if (i < tris[ud].size()) {
-					auto [a, b] = tris[ud][i];
+				for(edge_id j = first_out[ud][i]; j < first_out[ud][i + 1]; j++) {
+					auto [a, b] = tris[ud][j];
 					if (a != invalid_id) {
 						assert(b != invalid_id);
-						flow[ud ^ 1][a] += flow[ud][i];
-						flow[ud][b] += flow[ud][i];
-						flow[ud][i] = 0;
+
+						//triangle
+						assert(tail[ud][j] == head[ud ^ 1][a]);
+						assert(head[ud][j] == head[ud][b]);
+						assert(tail[ud ^ 1][a] == tail[ud][b]);
+
+						flow[ud ^ 1][a] += flow[ud][j];
+						flow[ud][b] += flow[ud][j];
+						flow[ud][j] = 0;
 					}
 				}
 			}
@@ -325,11 +336,16 @@ struct CCH_metric {
 		std::vector<flow_t> in_flow(cch->input_arc_count());
 
 		for (edge_id i = 0; i < cch->input_arc_count(); i++) {
-			edge_id j = cch_mapping[i];
-			if (j != invalid_id) {
-				uint32_t ud = cch_in_tail[i] < cch_in_head[i] ? UP : DOWN;
-				in_flow[i] += flow[ud][j];
-			}
+			edge_id j = cch_mapping[i]; // input edge-id to cch-edge-id
+			if (j == invalid_id) continue;
+			uint32_t ud = cch_in_tail[i] < cch_in_head[i] ? UP : DOWN;
+			j = new_id[j][ud]; // input cch-edge-id to perfect customized id
+			if (j == invalid_id) continue;
+			assert(ud != UP || tail[ud][j] == cch_in_tail[i]);
+			assert(ud != UP || head[ud][j] == cch_in_head[i]);
+			assert(ud != DOWN || head[ud][j] == cch_in_tail[i]);
+			assert(ud != DOWN || tail[ud][j] == cch_in_head[i]);
+			in_flow[i] += flow[ud][j];
 		}
 		return in_flow;
 	}

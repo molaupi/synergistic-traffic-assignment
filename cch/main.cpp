@@ -1,4 +1,4 @@
-//#define NDEBUG
+#define NDEBUG
 #include <bits/stdc++.h>
 #include "cch.h"
 
@@ -6,6 +6,7 @@ using namespace std::chrono;
 
 int main(int /*argc*/, char** /*argv*/) {
 	std::cout << std::fixed << std::setprecision(6);
+	std::cerr << std::fixed << std::setprecision(6);
 
 	std::vector<edge_id> first_out = loadVector<edge_id>("../inputs/first_out");
 	std::vector<node_id> head = loadVector<node_id>("../inputs/head");
@@ -38,6 +39,7 @@ int main(int /*argc*/, char** /*argv*/) {
 	std::vector<weight_t> new_dist(dist.size());
 	int iteration = 0;
 	std::cerr << "iteratiom\ttotal\tpotential" << std::endl;
+	double last_potential = -1;
 	do {
 		iteration++;
 		std::cout << "iteration: " << iteration << std::endl;
@@ -62,7 +64,8 @@ int main(int /*argc*/, char** /*argv*/) {
 		std::cout << "  potential: " << potential << std::endl;
 		std::cerr << iteration << "\t" << total << "\t" << potential << std::endl;
 		//todo check convergence
-		if (false) break;
+		if (abs(last_potential - potential) < 0.000001) break;
+		last_potential = potential;
 		std::cout << "  preparing next iteration" << std::endl;
 		metric.customize(new_dist, true);
 	} while (true);
