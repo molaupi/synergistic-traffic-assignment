@@ -37,25 +37,30 @@ int main(int /*argc*/, char** /*argv*/) {
 	std::vector<flow_t> flow;
 	std::vector<weight_t> new_dist(dist.size());
 	int iteration = 0;
+	std::cerr << "iteratiom\ttotal\tpotential" << std::endl;
 	do {
 		iteration++;
 		std::cout << "iteration: " << iteration << std::endl;
 		std::cout << "  assign od pairs" << std::endl;
+		double total = 0;
 		for (std::size_t i = 0; i < origin.size(); i++) {
-			query.query(origin[i], destination[i]);
+			total += query.query(origin[i], destination[i]);
 			query.add_flow(1);
 		}
+		std::cout << "  total: " << total << std::endl;
 		
 		std::cout << "  calculate flow/new travel time" << std::endl;
 		flow = metric.get_flow();
 		double potential = 0;
 		for (edge_id i = 0; i < cch.input_arc_count(); i++) {
 			new_dist[i] = dist[i] / (flow[i] + 1);
+			assert(new_dist[i] <= dist[i]);
 			for (flow_t commodity = 0; commodity <= flow[i]; commodity++) {
 				potential += static_cast<double>(dist[i]) / (commodity + 1);
 			}
 		}
 		std::cout << "  potential: " << potential << std::endl;
+		std::cerr << iteration << "\t" << total << "\t" << potential << std::endl;
 		//todo check convergence
 		if (false) break;
 		std::cout << "  preparing next iteration" << std::endl;

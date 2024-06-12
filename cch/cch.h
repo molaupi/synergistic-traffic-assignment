@@ -173,7 +173,7 @@ struct CCH_metric {
 		assert(weights.size() == cch->input_arc_count());
 		std::vector<edge_id> tmp_id(cch->node_count(), invalid_id);
 		std::vector<tuple<weight_t>> tmp(cch->cch_arc_count(), {inf_weight, inf_weight});
-		std::vector<tuple<edge_id>> tmp_id2(cch->cch_arc_count(), {invalid_id, invalid_id});
+		std::vector<tuple<edge_id>> new_id(cch->cch_arc_count(), {invalid_id, invalid_id});
 		std::vector<tuple<tri>> tmp_tri(cch->cch_arc_count(), {tri{invalid_id, invalid_id}, tri{invalid_id, invalid_id}});
 
 		for (edge_id i = 0; i < cch->input_arc_count(); i++) {
@@ -203,6 +203,8 @@ struct CCH_metric {
 							if (lower < tmp[iy][ud]) {
 								tmp[iy][ud] = lower;
 								tmp_tri[iy][ud] = {xi, xy};
+								assert(xi < iy);
+								assert(xy < iy);
 							}
 						}
 					}
@@ -225,12 +227,12 @@ struct CCH_metric {
 							//triangle i->ix->xy&i->iy (i lowest, x mid, y highest)
 							#pragma GCC unroll 2
 							for (uint32_t ud : {UP, DOWN}) {
-								weight_t upper = tmp[iy][ud] + tmp[xy][ud ^ 1];
+								weight_t upper = tmp[iy][ud] + tmp[xy][ud ^ 1] + EPS;
 								if (upper < tmp[ix][ud]) {
 									tmp[ix][ud] = upper;
 									tmp_tri[ix][ud] = deleted;
 								}
-								weight_t mid = tmp[ix][ud] + tmp[xy][ud];
+								weight_t mid = tmp[ix][ud] + tmp[xy][ud] + EPS;
 								if (mid < tmp[iy][ud]) {
 									tmp[iy][ud] = mid;
 									tmp_tri[iy][ud] = deleted;
@@ -248,10 +250,15 @@ struct CCH_metric {
 		#pragma GCC unroll 2
 		for (uint32_t ud : {UP, DOWN}) {
 			first_out[ud].assign(cch->node_count() + 1, 0);
-			tail[ud].reserve(cch->cch_arc_count());
+			head[ud].clear();
 			head[ud].reserve(cch->cch_arc_count());
+			tail[ud].clear();
+			tail[ud].reserve(cch->cch_arc_count());
+			weight[ud].clear();
 			weight[ud].reserve(cch->cch_arc_count());
+			flow[ud].clear();
 			flow[ud].reserve(cch->cch_arc_count());
+			tris[ud].clear();
 			tris[ud].reserve(cch->cch_arc_count());
 		}
 
@@ -265,16 +272,17 @@ struct CCH_metric {
 					weight[ud].push_back(tmp[i][ud]);
 					flow[ud].push_back(0);
 
-					tmp_id2[i][ud] = tris[ud].size();
+					new_id[i][ud] = tris[ud].size();
 					auto [a, b] = tmp_tri[i][ud];
 					if (a != invalid_id) {
 						assert(b != invalid_id);
+
 						assert(a < i);
-						a = tmp_id2[a][ud ^ 1];
+						a = new_id[a][ud ^ 1];
 						assert(a < tris[ud ^ 1].size());
 
 						assert(b < i);
-						b = tmp_id2[b][ud];
+						b = new_id[b][ud];
 						assert(b < tris[ud].size());
 
 						assert(head[ud].back() == head[ud][b]);

@@ -12,6 +12,8 @@ using id_t = uint32_t;
 using node_id = id_t;
 using edge_id = id_t;
 
+constexpr weight_t EPS = 0.1;
+
 constexpr weight_t inf_weight = std::numeric_limits<weight_t>::infinity();
 constexpr id_t invalid_id = 0xFFFF'FFFF;
 
