@@ -8,6 +8,7 @@
 
 using weight_t = float;
 using flow_t = uint32_t; //integral
+using capacity_t = uint32_t; //integral
 using id_t = uint32_t;
 using node_id = id_t;
 using edge_id = id_t;
