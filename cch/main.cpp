@@ -4,7 +4,7 @@
 
 using namespace std::chrono;
 
-constexpr double RATIO = 0;
+constexpr double RATIO = 0.5;
 constexpr inline weight_t cost(flow_t flow) {
 	return RATIO + (1.0 - RATIO) / (flow + 1);
 }
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 	std::cerr << "iteratiom\ttotal\tpotential" << std::endl;
 	double last_potential = -1;
 	auto start = high_resolution_clock::now();
-	std::vector<double> accumulated_cost(origin.size());
+	std::vector<double> accumulated_cost(origin.size() + 1);
 	accumulated_cost[0] = cost(0);
 	for (std::size_t i = 1; i < accumulated_cost.size(); i++) {
 		accumulated_cost[i] = accumulated_cost[i - 1] + cost(i);
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 		std::cout << "  potential: " << potential << std::endl;
 		std::cerr << iteration << "\t" << total << "\t" << potential << std::endl;
 
-		//dumpVector<flow_t>("../outputs/" + basename + ".cap." + std::to_string(iteration) + ".flow", flow);
+		dumpVector<flow_t>("../outputs/" + basename + ".ratio." + std::to_string(RATIO) + "." + std::to_string(iteration) + ".flow", flow);
 
 		if (abs(last_potential - potential) < 0.000001) break;
 		last_potential = potential;
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 
-	dumpVector<flow_t>("../outputs/" + basename + ".cap.flow", flow);
+	//dumpVector<flow_t>("../outputs/" + basename + ".cap.flow", flow);
 
 	std::cout << "iterations: " << iteration << std::endl;
 	std::cout << "total: " << duration.count() << " microseconds" << std::endl;
