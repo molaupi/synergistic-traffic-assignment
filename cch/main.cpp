@@ -25,10 +25,10 @@ int main(int argc, char** argv) {
 	std::vector<uint32_t> travel_time = loadVector<uint32_t>("../inputs/travel_time");
 	std::vector<weight_t> dist(travel_time.size());
 	for (edge_id i = 0; i < travel_time.size(); i++) dist[i] = static_cast<weight_t>(travel_time[i]);
-	std::vector<float> lat = loadVector<float>("../inputs/latitude");
-	std::vector<float> lng = loadVector<float>("../inputs/longitude");
+	// std::vector<float> lat = loadVector<float>("../inputs/latitude");
+	// std::vector<float> lng = loadVector<float>("../inputs/longitude");
 	std::vector<node_id> node_order = loadVector<node_id>("../inputs/cch_order");
-	std::vector<capacity_t> capacity = loadVector<capacity_t>("../inputs/capacity");
+	// std::vector<capacity_t> capacity = loadVector<capacity_t>("../inputs/capacity");
 
 	std::vector<node_id> origin = loadVector<node_id>("../inputs/od_pairs/" + basename + ".origin");
 	std::vector<node_id> destination = loadVector<node_id>("../inputs/od_pairs/" + basename + ".destination");
