@@ -6,10 +6,11 @@ For information on the algorithm, we refer to the following paper:
 * Thomas Bläsius, Adrian Feilhauer, Markus Jung, Moritz Laupichler, Peter Sanders, Michael Zündorf. 
   2025. 
   Synergistic Traffic Assignment. 
-  In Proc. of the 24th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2025), 
+  In Proc. of the 24th International Conference on Autonomous Agents and Multiagent Systems (AAMAS 2025),
+  Pages 352 - 360,
   Detroit, Michigan, USA, May 19 – 23, 2025, 
-  IFAAMAS
-  (to be published)
+  IFAAMAS,
+  https://dl.acm.org/doi/10.5555/3709347.3743549
 
 If you use this code in your scientific publication, we ask that you cite the paper above. 
 
